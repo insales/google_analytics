@@ -215,30 +215,23 @@ module Rubaidh # :nodoc:
 
       if options[:transaction]
         ecommerce_code = "\nga('require', 'ec');\n"
-        # нарезаем заказ на куски по 5 товаров, потому что не все заказы "пролезают" в ограничение
-        options[:products_in_order].each_slice(5) do |products_slice|
-          products_slice.each do |product_hash|
-            # https://developers.google.com/analytics/devguides/collection/analyticsjs/enhanced-ecommerce#product-data
-            # ga('ec:addProduct', {
-            #       'id': 'P12345',
-            #       'name': 'Android Warhol T-Shirt',
-            #       'category': 'Apparel',
-            #       'price': '29.20',
-            #       'quantity': 1,
-            #       'variant': 'Black'
-            #     });
-            ecommerce_code << "ga('ec:addProduct', #{product_hash.to_json});\n"
-          end
-          # отправляем пачку товаров
-          ecommerce_code << "ga('ec:setAction', 'purchase', #{{ id: options[:transaction][:id] }.to_json});\n"
-          ecommerce_code << "ga('send', 'event', 'Checkout', 'PurchasePartial', 'items batch');\n"
+        # https://developers.google.com/analytics/devguides/collection/analyticsjs/enhanced-ecommerce#product-data
+        # ga('ec:addProduct', {
+        #       'id': 'P12345',
+        #       'name': 'Android Warhol T-Shirt',
+        #       'category': 'Apparel',
+        #       'price': '29.20',
+        #       'quantity': 1,
+        #       'variant': 'Black'
+        #     });
+        options[:products_in_order].each do |product_hash|
+          ecommerce_code << "ga('ec:addProduct', #{product_hash.to_json});\n"
         end
-        # удаляем поле revenue, чтобы не удваивалась прибыль: она посчитается по всем пачкам товаров, которые мы уже отправили
-        options[:transaction].delete(:revenue)
         # https://developers.google.com/analytics/devguides/collection/analyticsjs/enhanced-ecommerce#action-data
         # ga('ec:setAction', 'purchase', {          // Transaction details are provided in an actionFieldObject.
         #   'id': 'T12345',                         // (Required) Transaction id (string).
         #   'affiliation': 'Google Store - Online', // Affiliation (string).
+        #   'revenue': '37.39',                     // Revenue (currency).
         #   'tax': '2.85',                          // Tax (currency).
         #   'shipping': '5.34',                     // Shipping (currency).
         # });
